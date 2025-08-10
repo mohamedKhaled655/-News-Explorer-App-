@@ -28,6 +28,36 @@ class NewsViewModel @Inject constructor(
     private val _news = MutableStateFlow<Result<NewsResponse>>(Result.Loading)
     val news  = _news.asStateFlow()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _searchQuery.debounce(700)
+                .distinctUntilChanged()
+                .collect{ query ->
+                    if (query.isNotBlank()){
+                        getNews(query)
+                    }
+
+                }
+        }
+    }
+
+    fun onSearchQueryChanged(query: String){
+        _searchQuery.value = query
+    }
+
+    private suspend fun getNews(query: String){
+        newsUseCase.invoke(query)
+            .flowOn(Dispatchers.IO)
+            .catch { e -> _news.value = Result.Failure(e) }
+            .collect{result ->
+                _news.value = result
+                saveLastQueryUseCase(query)
+            }
+    }
+
 
     fun searchNews(query: String){
         viewModelScope.launch {

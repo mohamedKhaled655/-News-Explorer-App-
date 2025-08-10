@@ -31,7 +31,7 @@ import com.example.core.utils.Result
 @Composable
 fun HomeScreen(viewModel: NewsViewModel = hiltViewModel(),navigateToNewsDetail: (url: String) -> Unit,) {
     val newsState = viewModel.news.collectAsState()
-    var query by remember { mutableStateOf("") }
+    val query by viewModel.searchQuery.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.loadLastQuery()
     }
@@ -41,11 +41,11 @@ fun HomeScreen(viewModel: NewsViewModel = hiltViewModel(),navigateToNewsDetail: 
             .fillMaxSize()
             .padding(innerPadding)) {
             SearchField(query, onClick = {
-                query = ""
+                viewModel.onSearchQueryChanged("")
 
             }) {
-                query = it
-                viewModel.searchNews(it)
+
+                viewModel.onSearchQueryChanged(it)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
